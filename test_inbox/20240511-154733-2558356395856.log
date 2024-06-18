@@ -1,0 +1,13 @@
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Pls activate your account
+From: webmaster@localhost
+To: copter09@mail.com
+Date: Sat, 11 May 2024 08:47:33 -0000
+Message-ID: <171541725351.8428.8004337065743271829@NB2_ALISARA-K.MCP.net>
+
+Click to activate Account
+
+http://127.0.0.1:8000/users/activate/MTA/c6vd79-ed1a123a054e1137abdd4b289f047ae8
+-------------------------------------------------------------------------------
