@@ -1,0 +1,583 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+
+{% block site_title %}
+List view
+{% endblock %}
+
+{% block content %}
+<section>
+    <div class="dashboard-container">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <div class="sidebar">
+            <!-- Search bar countries -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" onkeyup="filterCards()" placeholder="Search for countries...">
+            </div>
+            <!-- Dropdown filter -->
+            <div class="dropdown-filter">
+                <select id="certificationFilter" onchange="filterTable()">
+                    <option value="all">All Certifications</option>
+                    {% for certification in certifications %}
+                    <option value="{{ certification }}">{{ certification }}</option>
+                    {% endfor %}
+                </select>
+                <select id="statusFilter" onchange="filterTable()">
+                    <option value="all">All Statuses</option>
+                    {% for status in statuses %}
+                    <option value="{{ status }}">{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Country Cards -->
+            <div class="country-cards" id="cardContainer">
+                <div class="country-card card" data-name="All" data-country-id="all" onclick="filterTable('all', this)">
+                    <img src="{% static 'app_general/all.png' %}" alt="All" class="country-image">
+                    <p class="country-name">All </p>
+                </div>
+                {% for country in countries %}
+                <div class="country-card card" data-name="{{ country.name }}" data-country-id="{{ country.id }}" onclick="filterTable({{ country.id }}, this)">
+                    <img src="{% static country.image_relative_url %}" alt="{{ country.name }}" class="country-image">
+                    <p class="country-name">{{ country.name }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Search bar for table -->
+            <div class="main-content-header">
+                <div class="search-bar">
+                    <input type="text" id="searchTableInput" onkeyup="filterTableSearch()" placeholder="Search for certificates...">
+                </div>
+                <div class="view-icons">
+                    <i class="fa fa-list" aria-hidden="true"></i>
+                    <i class="fa fa-th-large" aria-hidden="true"></i>
+                </div>
+            </div>
+            <!-- List View -->
+            <div class="list-view active">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)">Certification <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th onclick="sortTable(1)">Certificate Number <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th onclick="sortTable(2)">Expire Date <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th onclick="sortTable(3)">Days Until Expiry <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th onclick="sortTable(4)">Status <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th>Models</th>
+                        </tr>
+                    </thead>
+                    <tbody id="certTableBody">
+                        {% for cert_no in certification_numbers %}
+                        <tr data-country-id="{{ cert_no.certification.country.id }}" data-certification="{{ cert_no.certification.certificate_name }}" data-status="{{ cert_no.status }}">
+                            <td>{{ cert_no.certification.certificate_name }}</td>
+                            <td>{{ cert_no.certificate_no }}</td>
+                            <td>{{ cert_no.expire_date|date:"d M Y" }}</td>
+                            <td>{{ cert_no.days_until_expiry }}</td>
+                            <td class="tag status-{{ cert_no.status }}">{{ cert_no.status }}</td>
+                            <td>
+                                <!-- Models Popup -->
+                                <a href="javascript:void(0)" onclick="openModelPopup({{ cert_no.id }})">View Models</a>
+                                <div id="modelPopup{{ cert_no.id }}" class="model-popup">
+                                    <div class="popup-content">
+                                        <span class="close" onclick="closeModelPopup({{ cert_no.id }})">&times;</span>
+                                        <h2>Models</h2>
+                                        <p><strong>Indoor Models:</strong></p>
+                                        <ul>
+                                            {% for indoor in cert_no.indoor_models.all %}
+                                                <li>{{ indoor.name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                        <p><strong>Outdoor Models:</strong></p>
+                                        <ul>
+                                            {% for outdoor in cert_no.outdoor_models.all %}
+                                                <li>{{ outdoor.name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Card View -->
+            <div class="card-view">
+                <div class="card-container">
+                    {% for cert_no in certification_numbers %}
+                    <div class="card">
+                        <h3>{{ cert_no.certification.certificate_name }}</h3>
+                        <p>Certificate Number: {{ cert_no.certificate_no }}</p>
+                        <p>Expire Date: {{ cert_no.expire_date|date:"d M Y" }}</p>
+                        <p>Days Until Expiry: {{ cert_no.days_until_expiry }}</p>
+                        <p>Status: <span class="tag status-{{ cert_no.status }}">{{ cert_no.status }}</span></p>
+                        <p>
+                            <a href="javascript:void(0)" onclick="openModelPopup({{ cert_no.id }})">View Models</a>
+                            <div id="modelPopup{{ cert_no.id }}" class="model-popup">
+                                <div class="popup-content">
+                                    <span class="close" onclick="closeModelPopup({{ cert_no.id }})">&times;</span>
+                                    <h2>Models</h2>
+                                    <p><strong>Indoor Models:</strong></p>
+                                    <ul>
+                                        {% for indoor in cert_no.indoor_models.all %}
+                                            <li>{{ indoor.name }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    <p><strong>Outdoor Models:</strong></p>
+                                    <ul>
+                                        {% for outdoor in cert_no.outdoor_models.all %}
+                                            <li>{{ outdoor.name }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<script>
+// Card Country Content
+let selectedCountryId = 'all';
+function filterCards() {
+    var input, filter, cards, cardContainer, card, title, i;
+    input = document.getElementById("searchInput");
+    filter = input.value.toUpperCase();
+    cardContainer = document.getElementById("cardContainer");
+    cards = cardContainer.getElementsByClassName("card");
+    for (i = 0; i < cards.length; i++) {
+        title = cards[i].getAttribute("data-name");
+        if (title.toUpperCase().indexOf(filter) > -1) {
+            cards[i].style.display = "";
+        } else {
+            cards[i].style.display = "none";
+        }
+    }
+}
+function updateCardClasses() {
+    var cards = document.querySelectorAll('.card');
+    cards.forEach(function(card, index) {
+        card.style.setProperty('--i', index + 1);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateCardClasses();
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        filterCards();
+        updateCardClasses();
+    });
+});
+
+
+// table content
+function filterTable(countryId = selectedCountryId, element = null) {
+    if (countryId !== selectedCountryId) {
+        selectedCountryId = countryId;
+        document.getElementById('certificationFilter').value = 'all'; // Reset certification filter to "All Certifications"
+        document.getElementById('statusFilter').value = 'all'; // Reset status filter to "All Statuses"
+    }
+
+    var certificationFilter = document.getElementById('certificationFilter').value;
+    var statusFilter = document.getElementById('statusFilter').value;
+
+    var rows = document.getElementById('certTableBody').getElementsByTagName('tr');
+    var certifications = new Set();
+
+    for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var countryMatch = (countryId === 'all' || row.getAttribute('data-country-id') == countryId);
+        var certificationMatch = (certificationFilter === 'all' || row.getAttribute('data-certification') == certificationFilter);
+        var statusMatch = (statusFilter === 'all' || row.getAttribute('data-status') == statusFilter);
+
+        if (countryMatch && certificationMatch && statusMatch) {
+            row.style.display = '';
+            certifications.add(row.getAttribute('data-certification'));
+        } else {
+            row.style.display = 'none';
+        }
+    }
+
+    updateDropdownFilters(certifications);
+
+    if (element) {
+        var cards = document.getElementsByClassName('card');
+        for (var i = 0; i < cards.length; i++) {
+            cards[i].classList.remove('selected');
+        }
+        element.classList.add('selected');
+    }
+
+    filterTableSearch();
+}
+
+
+function updateDropdownFilters(certifications) {
+    var certificationFilter = document.getElementById('certificationFilter');
+    var options = certificationFilter.options;
+    var currentCertification = certificationFilter.value;
+
+    for (var i = 0; i < options.length; i++) {
+        if (options[i].value === 'all') continue;
+        if (certifications.has(options[i].value)) {
+            options[i].style.display = '';
+        } else {
+            options[i].style.display = 'none';
+        }
+    }
+
+    if (certifications.has(currentCertification)) {
+        certificationFilter.value = currentCertification;
+    } else {
+        certificationFilter.value = 'all';
+    }
+}
+
+
+// Sorting function
+function sortTable(columnIndex) {
+    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+    table = document.querySelector("table");
+    switching = true;
+    dir = "asc"; 
+    while (switching) {
+        switching = false;
+        rows = table.rows;
+        for (i = 1; i < (rows.length - 1); i++) {
+            shouldSwitch = false;
+            x = rows[i].getElementsByTagName("TD")[columnIndex];
+            y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
+
+            var xContent = x.textContent || x.innerText;
+            var yContent = y.textContent || y.innerText;
+
+            if (columnIndex === 2 || columnIndex === 3) { // Handling date or numeric sorting
+                xContent = xContent.replace(/[^0-9]/g, '');
+                yContent = yContent.replace(/[^0-9]/g, '');
+                xContent = parseInt(xContent);
+                yContent = parseInt(yContent);
+            }
+
+            if (dir === "asc") {
+                if (xContent > yContent) {
+                    shouldSwitch = true;
+                    break;
+                }
+            } else if (dir === "desc") {
+                if (xContent < yContent) {
+                    shouldSwitch = true;
+                    break;
+                }
+            }
+        }
+        if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+            switchcount++;
+        } else {
+            if (switchcount === 0 && dir === "asc") {
+                dir = "desc";
+                switching = true;
+            }
+        }
+    }
+}
+
+function filterTableSearch() {
+    var input, filter, table, tr, td, i, j, txtValue;
+    input = document.getElementById("searchTableInput");
+    filter = input.value.toUpperCase();
+    table = document.querySelector("table");
+    tr = table.getElementsByTagName("tr");
+
+    for (i = 1; i < tr.length; i++) {
+        tr[i].style.display = "none"; 
+        td = tr[i].getElementsByTagName("td");
+
+        var countryMatch = (selectedCountryId === 'all' || tr[i].getAttribute('data-country-id') == selectedCountryId);
+        var certificationFilter = document.getElementById('certificationFilter').value;
+        var statusFilter = document.getElementById('statusFilter').value;
+        var certificationMatch = (certificationFilter === 'all' || tr[i].getAttribute('data-certification') == certificationFilter);
+        var statusMatch = (statusFilter === 'all' || tr[i].getAttribute('data-status') == statusFilter);
+
+        if (!countryMatch || !certificationMatch || !statusMatch) continue;
+
+        for (j = 0; j < td.length; j++) {
+            if (td[j]) {
+                txtValue = td[j].textContent || td[j].innerText
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = ""; 
+                    break;
+                }
+            }
+        }
+    }
+    highlightSearchResults(filter);
+}
+
+function openModelPopup(certNoId) {
+    document.getElementById('modelPopup' + certNoId).style.display = 'block';
+    var filter = document.getElementById("searchTableInput").value.toUpperCase();
+    highlightPopupModels(certNoId, filter);
+}
+
+function closeModelPopup(certNoId) {
+    document.getElementById('modelPopup' + certNoId).style.display = 'none';
+}
+
+function highlightPopupModels(certNoId, filter) {
+    var popup, lists, items, i, txtValue;
+    popup = document.getElementById('modelPopup' + certNoId);
+    lists = popup.getElementsByTagName('ul');
+
+    for (i = 0; i < lists.length; i++) {
+        items = lists[i].getElementsByTagName('li');
+        for (var j = 0; j < items.length; j++) {
+            txtValue = items[j].textContent || items[j].innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                items[j].classList.add('highlight');
+            } else {
+                items[j].classList.remove('highlight');
+            }
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateCardClasses();
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        filterCards();
+        updateCardClasses();
+    });
+    document.getElementById('searchTableInput').addEventListener('keyup', function() {
+        filterTableSearch();
+    });
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const listViewIcon = document.querySelector('.fa-list');
+    const cardViewIcon = document.querySelector('.fa-th-large');
+    const listView = document.querySelector('.list-view');
+    const cardView = document.querySelector('.card-view');
+
+    listViewIcon.addEventListener('click', () => {
+        setActiveView('list');
+    });
+
+    cardViewIcon.addEventListener('click', () => {
+        setActiveView('card');
+    });
+
+    function setActiveView(view) {
+        if (view === 'list') {
+            listView.classList.add('active');
+            cardView.classList.remove('active');
+            listViewIcon.classList.add('active');
+            cardViewIcon.classList.remove('active');
+        } else {
+            listView.classList.remove('active');
+            cardView.classList.add('active');
+            listViewIcon.classList.remove('active');
+            cardViewIcon.classList.add('active');
+        }
+    }
+
+    // Initialize with list view active
+    setActiveView('list');
+});
+
+</script>
+
+
+<style>
+    .model-popup {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.popup-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.3s;
+}
+
+.popup-content h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+}
+
+.popup-content p {
+    margin: 10px 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.popup-content ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0 0 20px 0;
+}
+
+.popup-content li {
+    font-size: 16px;
+    color: #666;
+    padding: 5px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.popup-content li:last-child {
+    border-bottom: none;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.selected {
+    background-color: #dcdcdc;
+}
+
+.sort-icon {
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+.dropdown-filter {
+    margin: 10px 0;
+}
+
+.dropdown-filter select {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+.search-bar {
+    margin: 5px 0;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+/* CSS for Status Column Colors */
+/* Base CSS for tag */
+.tag {
+  font-size: 16px;
+  padding: auto;
+  display: flex;
+ 
+}
+
+
+
+
+/* Optional: Styling for the table for better appearance */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+table th {
+    background-color: #f2f2f2;
+    cursor: pointer;
+}
+
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+table tr:hover {
+    background-color: #ddd;
+}
+
+/* CSS for upcoming section */
+.upcoming {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 30px;
+  margin-bottom: 30px;
+}
+
+/* CSS for main content header and search bar */
+.main-content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.main-content-header .search-bar {
+  flex: 1;
+}
+
+.main-content-header .search-bar input {
+  width: 95%; /* Reduce the width to leave space for icons */
+}
+ 
+
+/* .card {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin: 10px;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+} */
+
+</style>
+{% endblock %}
+
+
