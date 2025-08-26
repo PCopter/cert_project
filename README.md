@@ -1,1 +1,1 @@
-QA Information Management System -- from Web application using Django
+#QA Information Management System -- from Web application using Django
